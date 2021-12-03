@@ -65,7 +65,7 @@ class Blockchain(object):
 	@staticmethod
 	def valid_proof(last_proof, proof):
 		# check is proof is correct
-		guess = F'{last_proof}{proof}'
+		guess = f'{last_proof}{proof}'
 		guess_hash = hashlib.sha256(guess).hexdigest()
 
 		return guess_hash[:4] == "0000"
