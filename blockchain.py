@@ -6,7 +6,7 @@ import json
 from time import time
 from uuid import uuid4
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 class Blockchain(object):
 	def __init__(self):
@@ -65,7 +65,7 @@ class Blockchain(object):
 	@staticmethod
 	def valid_proof(last_proof, proof):
 		# check is proof is correct
-		guess = f'{last_proof}{proof}'.encode()
+		guess = F'{last_proof}{proof}'
 		guess_hash = hashlib.sha256(guess).hexdigest()
 
 		return guess_hash[:4] == "0000"
@@ -76,16 +76,25 @@ node_identifier = str(uuid4()).replace('-', '')
 
 blockchain = Blockchain()
 
-@app.route('transactions/new', methods=['POST'])
+@app.route('/transactions/new', methods=['POST'])
 def new_transaction():
-	return 'add new transaction'
+	values = request.get_json()
+
+	required = ['sender', 'recipient', 'amount']
+	if not all(k in values for k in required):
+		return 'Missing values', 400
+	
+	index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
+
+	response = {'message': f'transaction was added into block {index}'}
+	return jsonify(response), 201
 
 
 @app.route('/mine', methods=['GET'])
 def mine():
 	return 'mine new block'
 
-@app.route('chain', methods=['GET'])
+@app.route('/chain', methods=['GET'])
 def full_chain():
 	response = {
 		'chain': blockchain.chain,
