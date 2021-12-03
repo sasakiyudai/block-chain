@@ -57,7 +57,7 @@ class Blockchain(object):
 	def proof_of_work(self, last_proof):
 		# simple PoW
 		proof = 0
-		while self.valid_prrof(last_proof, proof) is False:
+		while self.valid_proof(last_proof, proof) is False:
 			proof += 1
 		
 		return proof
@@ -65,7 +65,7 @@ class Blockchain(object):
 	@staticmethod
 	def valid_proof(last_proof, proof):
 		# check is proof is correct
-		guess = f'{last_proof}{proof}'
+		guess = f'{last_proof}{proof}'.encode()
 		guess_hash = hashlib.sha256(guess).hexdigest()
 
 		return guess_hash[:4] == "0000"
@@ -92,7 +92,26 @@ def new_transaction():
 
 @app.route('/mine', methods=['GET'])
 def mine():
-	return 'mine new block'
+	last_block = blockchain.last_block
+	last_proof = last_block['proof']
+	proof = blockchain.proof_of_work(last_proof)
+
+	blockchain.new_transaction(
+		sender="0",
+		recipient=node_identifier,
+		amount=1,
+	)
+
+	block = blockchain.new_block(proof)
+
+	response = {
+		'message': 'mined new block',
+		'index': block['index'],
+		'transactions': block['transactions'],
+		'proof': block['proof'],
+		'previous_hash': block['previous_hash'],
+	}
+	return jsonify(response), 200
 
 @app.route('/chain', methods=['GET'])
 def full_chain():
